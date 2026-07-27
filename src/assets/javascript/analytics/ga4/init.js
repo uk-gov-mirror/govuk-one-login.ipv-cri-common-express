@@ -29,7 +29,6 @@ window.DI.analyticsGa4 = window.DI.analyticsGa4 || {};
             tracker.init();
           } catch (e) {
             // if there's a problem with the tracker, catch the error to allow other trackers to start
-            /* eslint-disable-next-line no-console */
             console.warn(
               "Error starting analytics tracker " + tracker + ": " + e.message,
               window.location,

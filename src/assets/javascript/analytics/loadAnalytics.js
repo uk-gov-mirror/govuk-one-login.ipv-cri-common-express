@@ -11,9 +11,8 @@ window.DI.analytics.vars = window.DI.analytics.vars || {};
 
   function loadUa(uaContainerId) {
     if (!isValid(uaContainerId)) {
-      /* eslint-disable-next-line no-console */
       console.warn(
-        "UA analytics will not be initialised: uaContainerId is ${uaContainerId}",
+        `UA analytics will not be initialised: uaContainerId is ${uaContainerId}`,
       );
       return;
     }
@@ -23,9 +22,8 @@ window.DI.analytics.vars = window.DI.analytics.vars || {};
 
   function loadGa4(ga4ContainerId) {
     if (!isValid(ga4ContainerId)) {
-      /* eslint-disable-next-line no-console */
       console.warn(
-        "GA4 analytics will not be initialised: ga4ContainerId is ${ga4ContainerId}",
+        `GA4 analytics will not be initialised: ga4ContainerId is ${ga4ContainerId}`,
       );
       return;
     }

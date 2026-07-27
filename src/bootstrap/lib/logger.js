@@ -68,7 +68,7 @@ const setup = (options = config.get("logs", {})) => hmpoLogger.config(options);
 
 const get = (name = ":hmpo-app", level = 1) => {
   if (process.env.USE_PINO_LOGGER !== "true") {
-    return hmpoLogger.get(name, ++level);
+    return hmpoLogger.get(name, level + 1);
   }
   if (pinoLoggers.has(name)) {
     return pinoLoggers.get(name);

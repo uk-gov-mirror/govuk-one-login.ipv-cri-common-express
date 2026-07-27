@@ -15,7 +15,6 @@ window.DI = window.DI || {};
   function cookieBannerInit(domain) {
     if (typeof domain !== "string") {
       //change
-      /* eslint-disable-next-line no-console */
       console.error(`Cookie banner cannot be initialised: domain is ${domain}`); //Change
       return; //change
     }

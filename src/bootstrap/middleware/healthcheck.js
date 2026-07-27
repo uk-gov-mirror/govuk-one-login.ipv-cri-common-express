@@ -3,7 +3,7 @@ const config = require("../lib/config");
 
 const middleware =
   ({ healthFn } = {}) =>
-  (req, res, next) => {
+  (req, res, _next) => {
     let id = nodeOS.hostname();
 
     if (process.env.pm_id) {
