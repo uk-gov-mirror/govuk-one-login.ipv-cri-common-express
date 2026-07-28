@@ -14,13 +14,6 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.55.0
-    hooks:
-      - id: eslint
-        files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
-        types: [file]
-        args: ["."]
   - repo: local
     hooks:
       - id: prettier
@@ -36,3 +29,11 @@ repos:
             \.git/.+
           )$
         entry: npx prettier --check
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        language: system
+        files: .[jt]sx?$
+        pass_filenames: false
+        entry: npm run lint

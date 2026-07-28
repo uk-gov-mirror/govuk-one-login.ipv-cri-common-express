@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const { join, parse } = require("path");
 const { readdirSync, lstatSync } = require("fs");
 const i18next = require("i18next");

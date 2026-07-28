@@ -6,7 +6,7 @@ const middleware =
     sessionEndedView = "errors/session-ended",
     defaultErrorView = "errors/error",
   } = {}) =>
-  (err, req, res, next) => {
+  (err, req, res, _next) => {
     const urlFn = (url) =>
       typeof url === "function" ? url(err, req, res) : url;
 

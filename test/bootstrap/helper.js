@@ -6,7 +6,7 @@ global.APP_ROOT = resolve(__dirname, "..", "..");
 
 global.CONFIG_RESET = () => {
   delete global.GLOBAL_CONFIG;
-  const config = require(APP_ROOT + "/src/bootstrap/lib/config");
+  const config = require(global.APP_ROOT + "/src/bootstrap/lib/config");
   config.setup({
     APP_ROOT: resolve(__dirname, "fixtures"),
     seed: {
@@ -25,7 +25,7 @@ global.LOGGER_RESET = () => {
     warn: vi.fn(),
   };
 
-  const logger = require(APP_ROOT + "/src/bootstrap/lib/logger");
+  const logger = require(global.APP_ROOT + "/src/bootstrap/lib/logger");
   if (vi.isMockFunction(logger.get)) {
     logger.get.mockRestore();
   }
@@ -34,5 +34,5 @@ global.LOGGER_RESET = () => {
   return loggerStub;
 };
 
-CONFIG_RESET();
-LOGGER_RESET();
+global.CONFIG_RESET();
+global.LOGGER_RESET();

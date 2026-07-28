@@ -17,7 +17,7 @@ const middleware = ({ versionFile = "version.json" } = {}) => {
   versionJSON.nodeVersion = process.versions.node;
   versionJSON.featureFlags = config.get("featureFlags");
 
-  return (req, res, next) => res.send(versionJSON);
+  return (req, res, _next) => res.send(versionJSON);
 };
 
 module.exports = {
