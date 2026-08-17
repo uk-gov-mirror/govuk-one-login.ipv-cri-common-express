@@ -6,7 +6,6 @@ module.exports = {
       scriptSrc: [
         "'self'",
         (_req, res) => `'nonce-${res.locals.cspNonce}'`,
-        "'sha256-+6WnXIl4mbFTCARd8N3COQmT3bJJmo32N8q8ZSQAIcU='",
         "https://www.googletagmanager.com",
         "https://www.google-analytics.com",
         "https://ssl.google-analytics.com",
