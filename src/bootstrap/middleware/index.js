@@ -104,24 +104,6 @@ const middleware = {
     const nunjucks = require("./nunjucks");
     const headers = require("./headers");
 
-    let hmpoComponents = null;
-    let hmpoComponentsDir = null;
-    const hmpoAffectedOptions = [];
-    try {
-      hmpoComponentsDir = path.dirname(require.resolve("hmpo-components"));
-      hmpoComponents = require("hmpo-components");
-    } catch {
-      if (views !== undefined || nunjucksOptions !== undefined) {
-        hmpoAffectedOptions.push('"views"/"nunjucks"');
-      }
-      if (locales !== undefined || translationOptions !== undefined) {
-        hmpoAffectedOptions.push('"locales"/"translation"');
-      }
-      if (publicOptions !== false) {
-        hmpoAffectedOptions.push('"public"');
-      }
-    }
-
     urls.public = urls.public || "/public";
     urls.publicImages =
       urls.publicImages || path.posix.join(urls.public, "/images");
@@ -157,7 +139,6 @@ const middleware = {
           publicDirs,
           publicImagesDirs,
           public: publicOptions,
-          hmpoComponentsDir,
         }),
       );
 
@@ -188,29 +169,19 @@ const middleware = {
 
     const nunjucksEnv = nunjucks.setup(app, {
       views,
-      hmpoComponentsDir,
       ...nunjucksOptions,
     });
 
     if (locales !== undefined || translationOptions !== undefined) {
       translation.setup(app, {
         locales,
-        hmpoComponentsDir,
         ...translationOptions,
       });
     }
 
-    if (hmpoComponents) {
-      hmpoComponents.setup(app, nunjucksEnv);
-    }
-
-    if (hmpoAffectedOptions.length > 0) {
-      logger
-        .get(PACKAGE_NAME)
-        .info(
-          `'hmpo-components' is not installed so additional setup has not been applied for: ${hmpoAffectedOptions.join(", ")}.`,
-        );
-    }
+    // Register form-component adapter macros as globals
+    const formComponents = require("./form-components");
+    formComponents.setup(app, nunjucksEnv);
 
     return app;
   },
@@ -223,6 +194,7 @@ const middleware = {
     app.use(session.middleware(sessionOptions));
     app.use(featureFlag.middleware());
     app.use(linkedFiles.middleware(sessionOptions));
+    app.use(require("./prepare-form-data"));
   },
 
   errorHandler(app = requiredArgument("app"), errorHandleroptions) {

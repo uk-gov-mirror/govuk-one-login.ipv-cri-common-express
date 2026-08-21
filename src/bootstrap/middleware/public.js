@@ -7,7 +7,6 @@ const middleware = ({
   publicDirs = ["public"],
   publicImagesDirs = ["assets/images"],
   public: publicOptions = { maxAge: 86400000 },
-  hmpoComponentsDir,
 } = {}) => {
   const router = express.Router();
 
@@ -24,16 +23,6 @@ const middleware = ({
       express.static(path.resolve(config.get("APP_ROOT"), dir), publicOptions),
     ),
   );
-
-  if (hmpoComponentsDir) {
-    router.use(
-      urls.publicImages,
-      express.static(
-        path.resolve(hmpoComponentsDir, "assets", "images"),
-        publicOptions,
-      ),
-    );
-  }
 
   router.use(
     urls.public,

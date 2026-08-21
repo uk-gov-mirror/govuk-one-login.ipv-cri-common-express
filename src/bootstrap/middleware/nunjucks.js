@@ -7,7 +7,7 @@ const frontendUi = require("@govuk-one-login/frontend-ui");
 
 const setup = (
   app,
-  { views = "views", hmpoComponentsDir, ...otherOptions } = {},
+  { views = "views", ...otherOptions } = {},
 ) => {
   const isDevEnv = Boolean(app.get("dev"));
   const APP_ROOT = config.get("APP_ROOT");
@@ -16,9 +16,6 @@ const setup = (
 
   views = [
     ...views,
-    ...(hmpoComponentsDir
-      ? [path.resolve(hmpoComponentsDir, "components")]
-      : []),
     path.resolve(path.dirname(require.resolve("govuk-frontend")), ".."),
     path.resolve("node_modules/@govuk-one-login/"),
   ];
