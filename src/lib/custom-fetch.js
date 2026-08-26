@@ -3,7 +3,7 @@ const logger = require("../bootstrap/lib/logger");
 const extractIpAddress = require("./user-ip-address");
 
 const DNS_ERROR_LOG_MESSAGE = "API request DNS resolution failure";
-const DNS_ERROR_CODES = ["ENOTFOUND", "EAI_AGAIN"];
+const DNS_ERROR_CODES = new Set(["ENOTFOUND", "EAI_AGAIN"]);
 const MAX_ERRORS_INSPECTED = 20;
 
 function findDnsError(error) {
@@ -18,7 +18,7 @@ function findDnsError(error) {
     seen.add(current);
     inspected++;
 
-    if (DNS_ERROR_CODES.includes(current.code)) return current;
+    if (DNS_ERROR_CODES.has(current.code)) return current;
 
     if (current.cause) queue.push(current.cause);
     if (Array.isArray(current.errors)) queue.push(...current.errors);
