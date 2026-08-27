@@ -3,6 +3,7 @@ import { expect, it, describe, vi, beforeEach } from "vitest";
 const {
   CustomFetchHttpError,
   customFetchMiddleware,
+  DNS_ERROR_LOG_MESSAGE,
 } = require("./custom-fetch");
 
 const badResponse = {
@@ -175,6 +176,127 @@ describe("custom-fetch.js with global.fetch mock", () => {
           },
         );
         abortSignalMock.mockReset();
+      });
+
+      describe("known network errors", () => {
+        const buildFetchFailure = (cause) =>
+          Object.assign(new TypeError("fetch failed"), { cause });
+
+        const expectDnsErrorLogged = (expectedProperties) => {
+          expect(loggerStub.error).toHaveBeenCalledTimes(1);
+          expect(loggerStub.error).toHaveBeenCalledWith(
+            DNS_ERROR_LOG_MESSAGE,
+            expect.objectContaining(expectedProperties),
+          );
+        };
+
+        const expectRethrown = async (thrownError) => {
+          global.fetch = vi.fn().mockRejectedValue(thrownError);
+
+          await expect(
+            dummyReq.customFetch("/path/something/here", { method: "GET" }),
+          ).rejects.toBe(thrownError);
+
+          global.fetch = vi.fn().mockResolvedValue(fetchResponse);
+        };
+
+        it("logs an identifiable entry when the API hostname does not resolve", async () => {
+          await expectRethrown(
+            buildFetchFailure(
+              Object.assign(new Error("getaddrinfo ENOTFOUND api.gov.uk"), {
+                code: "ENOTFOUND",
+                syscall: "getaddrinfo",
+                hostname: "api.gov.uk",
+              }),
+            ),
+          );
+
+          expectDnsErrorLogged({
+            errorCode: "ENOTFOUND",
+            errorMessage: "getaddrinfo ENOTFOUND api.gov.uk",
+            syscall: "getaddrinfo",
+            hostname: "api.gov.uk",
+            method: "GET",
+            url: "https://gov.uk/path/something/here",
+            req: dummyReq,
+          });
+        });
+
+        it("logs an identifiable entry for a temporary resolver failure", async () => {
+          await expectRethrown(
+            buildFetchFailure(
+              Object.assign(new Error("getaddrinfo EAI_AGAIN api.gov.uk"), {
+                code: "EAI_AGAIN",
+              }),
+            ),
+          );
+
+          expectDnsErrorLogged({ errorCode: "EAI_AGAIN" });
+        });
+
+        it("finds a DNS error nested in an AggregateError", async () => {
+          await expectRethrown(
+            buildFetchFailure(
+              new AggregateError([
+                Object.assign(new Error("connect ECONNREFUSED"), {
+                  code: "ECONNREFUSED",
+                }),
+                Object.assign(new Error("getaddrinfo ENOTFOUND api.gov.uk"), {
+                  code: "ENOTFOUND",
+                }),
+              ]),
+            ),
+          );
+
+          expectDnsErrorLogged({
+            errorCode: "ENOTFOUND",
+            errorMessage: "getaddrinfo ENOTFOUND api.gov.uk",
+          });
+        });
+
+        it("redacts sensitive query parameters from the logged url", async () => {
+          global.fetch = vi.fn().mockRejectedValue(
+            buildFetchFailure(
+              Object.assign(new Error("getaddrinfo ENOTFOUND api.gov.uk"), {
+                code: "ENOTFOUND",
+              }),
+            ),
+          );
+
+          await expect(
+            dummyReq.customFetch("/token?code=secret&other=fine"),
+          ).rejects.toBeInstanceOf(TypeError);
+
+          global.fetch = vi.fn().mockResolvedValue(fetchResponse);
+
+          expectDnsErrorLogged({
+            url: "https://gov.uk/token?code=hidden&other=fine",
+          });
+        });
+
+        it("does not log a DNS error for other network failures", async () => {
+          await expectRethrown(
+            buildFetchFailure(
+              Object.assign(new Error("connect ECONNREFUSED"), {
+                code: "ECONNREFUSED",
+              }),
+            ),
+          );
+
+          expect(loggerStub.error).not.toHaveBeenCalled();
+        });
+
+        it("does not follow a cycle in the error cause chain", async () => {
+          const cause = Object.assign(new Error("looping"), {
+            code: "ECONNRESET",
+          });
+          const error = buildFetchFailure(cause);
+          cause.cause = error;
+
+          await expectRethrown(error);
+
+          expect(loggerStub.error).not.toHaveBeenCalled();
+        });
       });
 
       it("throws CustomFetchHttpError if the request fails", async () => {
