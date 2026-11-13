@@ -20,61 +20,94 @@ describe("lib/csrf/token", () => {
 
   describe("create / verify", () => {
     it("creates a token that verifies with the same secrets", () => {
-      const t = token.create(consumerSecrets, currentSessionCsrfSecret);
+      const t = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, t),
+        token.verifyCsrfToken(consumerSecrets, currentSessionCsrfSecret, t),
       ).toEqual(true);
     });
 
     it("produces a fresh salt on each call", () => {
-      const a = token.create(consumerSecrets, currentSessionCsrfSecret);
-      const b = token.create(consumerSecrets, currentSessionCsrfSecret);
+      const a = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
+      const b = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
       expect(a).not.toBe(b);
     });
 
     it("signs with the first secret in the list", () => {
-      const t = token.create(["new", "old"], currentSessionCsrfSecret);
-      expect(token.verify(["new"], currentSessionCsrfSecret, t)).toEqual(true);
-      expect(token.verify(["old"], currentSessionCsrfSecret, t)).toEqual(false);
+      const t = token.createCsrfToken(["new", "old"], currentSessionCsrfSecret);
+      expect(
+        token.verifyCsrfToken(["new"], currentSessionCsrfSecret, t),
+      ).toEqual(true);
+      expect(
+        token.verifyCsrfToken(["old"], currentSessionCsrfSecret, t),
+      ).toEqual(false);
     });
 
     it("rejects a token signed with a different consumer secret", () => {
-      const t = token.create(["Tr0ub4dor&3"], currentSessionCsrfSecret);
+      const t = token.createCsrfToken(
+        ["Tr0ub4dor&3"],
+        currentSessionCsrfSecret,
+      );
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, t),
+        token.verifyCsrfToken(consumerSecrets, currentSessionCsrfSecret, t),
       ).to.equal(false);
     });
 
     it("rejects a token signed with a different session secret", () => {
-      const t = token.create(consumerSecrets, "not-my-session-secret");
+      const t = token.createCsrfToken(consumerSecrets, "not-my-session-secret");
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, t),
+        token.verifyCsrfToken(consumerSecrets, currentSessionCsrfSecret, t),
       ).toEqual(false);
     });
 
     it("rejects a tampered signature", () => {
-      const t = token.create(consumerSecrets, currentSessionCsrfSecret);
+      const t = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
       const [salt, sig] = t.split(".");
       const tampered = `${salt}.${sig.slice(0, -1)}${sig.endsWith("A") ? "B" : "A"}`;
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, tampered),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          tampered,
+        ),
       ).toEqual(false);
     });
 
     it("rejects a tampered salt", () => {
-      const t = token.create(consumerSecrets, currentSessionCsrfSecret);
+      const t = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
       const [salt, sig] = t.split(".");
       const tampered = `${salt.slice(0, -1)}${salt.endsWith("A") ? "B" : "A"}.${sig}`;
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, tampered),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          tampered,
+        ),
       ).toEqual(false);
     });
 
     it("rejects mismatched signature length without throwing", () => {
-      const t = token.create(consumerSecrets, currentSessionCsrfSecret);
+      const t = token.createCsrfToken(
+        consumerSecrets,
+        currentSessionCsrfSecret,
+      );
       const [salt, sig] = t.split(".");
       expect(
-        token.verify(
+        token.verifyCsrfToken(
           consumerSecrets,
           currentSessionCsrfSecret,
           `${salt}.${sig}extra`,
@@ -84,71 +117,99 @@ describe("lib/csrf/token", () => {
 
     it("rejects non-string tokens", () => {
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, undefined),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          undefined,
+        ),
       ).toEqual(false);
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, null),
+        token.verifyCsrfToken(consumerSecrets, currentSessionCsrfSecret, null),
       ).toEqual(false);
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, 42),
+        token.verifyCsrfToken(consumerSecrets, currentSessionCsrfSecret, 42),
       ).toEqual(false);
     });
 
     it("rejects a token with no separator", () => {
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, "nosalt"),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          "nosalt",
+        ),
       ).toEqual(false);
     });
 
     it("rejects a token with an empty salt or signature", () => {
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, ".sig"),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          ".sig",
+        ),
       ).toEqual(false);
       expect(
-        token.verify(consumerSecrets, currentSessionCsrfSecret, "salt."),
+        token.verifyCsrfToken(
+          consumerSecrets,
+          currentSessionCsrfSecret,
+          "salt.",
+        ),
       ).toEqual(false);
     });
   });
 
   describe("rotation window", () => {
     it("verifies tokens signed by the old secret while both are accepted", () => {
-      const oldToken = token.create(["old"], currentSessionCsrfSecret);
+      const oldToken = token.createCsrfToken(["old"], currentSessionCsrfSecret);
       expect(
-        token.verify(["new", "old"], currentSessionCsrfSecret, oldToken),
+        token.verifyCsrfToken(
+          ["new", "old"],
+          currentSessionCsrfSecret,
+          oldToken,
+        ),
       ).toEqual(true);
     });
 
     it("verifies tokens signed by the new secret while both are accepted", () => {
-      const newToken = token.create(["new"], currentSessionCsrfSecret);
+      const newToken = token.createCsrfToken(["new"], currentSessionCsrfSecret);
       expect(
-        token.verify(["new", "old"], currentSessionCsrfSecret, newToken),
+        token.verifyCsrfToken(
+          ["new", "old"],
+          currentSessionCsrfSecret,
+          newToken,
+        ),
       ).toEqual(true);
     });
 
     it("rejects tokens once the old secret is removed", () => {
-      const oldToken = token.create(["old"], currentSessionCsrfSecret);
-      expect(token.verify(["new"], currentSessionCsrfSecret, oldToken)).toEqual(
-        false,
-      );
+      const oldToken = token.createCsrfToken(["old"], currentSessionCsrfSecret);
+      expect(
+        token.verifyCsrfToken(["new"], currentSessionCsrfSecret, oldToken),
+      ).toEqual(false);
     });
 
     it("rejects tokens signed by an unknown secret even with multiple accepted", () => {
-      const rogue = token.create(["rogue"], currentSessionCsrfSecret);
+      const rogue = token.createCsrfToken(["rogue"], currentSessionCsrfSecret);
       expect(
-        token.verify(["new", "old"], currentSessionCsrfSecret, rogue),
+        token.verifyCsrfToken(["new", "old"], currentSessionCsrfSecret, rogue),
       ).toEqual(false);
     });
   });
 
   describe("hmac key encoding", () => {
     it("treats pairs as distinct", () => {
-      const tokenA = token.create(["foo"], "barbazqux");
-      expect(token.verify(["foobar"], "bazqux", tokenA)).toEqual(false);
+      const tokenA = token.createCsrfToken(["foo"], "barbazqux");
+      expect(token.verifyCsrfToken(["foobar"], "bazqux", tokenA)).toEqual(
+        false,
+      );
     });
 
     it("treats pairs that share a delimiter as distinct", () => {
-      const tokenA = token.create(["foo:bar"], "bazqux");
-      expect(token.verify(["foo"], "bar:bazqux", tokenA)).toEqual(false);
+      const tokenA = token.createCsrfToken(["foo:bar"], "bazqux");
+      expect(token.verifyCsrfToken(["foo"], "bar:bazqux", tokenA)).toEqual(
+        false,
+      );
     });
   });
 });

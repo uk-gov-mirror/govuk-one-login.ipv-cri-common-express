@@ -1,14 +1,16 @@
-const debug = require("debug")("hmpo-app:translations");
-const config = require("../lib/config");
-const path = require("node:path");
-const fs = require("node:fs");
-const i18n = require("hmpo-i18n");
+import debugLib from "debug";
+import { getConfig } from "../lib/config";
+import { resolve } from "node:path";
+import { existsSync } from "node:fs";
+import i18n from "hmpo-i18n";
 
-const setup = (
+const debug = debugLib("hmpo-app:translations");
+
+export const setupTranslation = (
   app,
   { locales = ".", hmpoComponentsDir, ...otherOptions } = {},
 ) => {
-  const APP_ROOT = config.get("APP_ROOT");
+  const APP_ROOT = getConfig("APP_ROOT");
   const isDevEnv = Boolean(app.get("dev"));
 
   if (!Array.isArray(locales)) locales = [locales];
@@ -16,8 +18,8 @@ const setup = (
   locales = [...locales, ...(hmpoComponentsDir ? [hmpoComponentsDir] : [])];
 
   locales = locales
-    .map((dir) => path.resolve(APP_ROOT, dir))
-    .filter((dir) => dir && fs.existsSync(dir));
+    .map((dir) => resolve(APP_ROOT, dir))
+    .filter((dir) => dir && existsSync(dir));
 
   debug("Locales", APP_ROOT, locales);
 
@@ -30,8 +32,4 @@ const setup = (
     query: "lang",
     ...otherOptions,
   });
-};
-
-module.exports = {
-  setup,
 };

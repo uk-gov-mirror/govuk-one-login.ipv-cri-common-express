@@ -1,10 +1,10 @@
-const helmetLib = require("helmet");
-const nocache = require("./nocache");
-const compatibility = require("./compatibility");
-const compression = require("compression");
-const { randomBytes } = require("node:crypto");
+import helmetLib from "helmet";
+import compression from "compression";
+import { randomBytes } from "node:crypto";
+import { noCacheMiddleware } from "./nocache";
+import { browserCompatibilityMiddleware } from "./compatibility";
 
-const setup = (
+export const setupHeaders = (
   app,
   {
     disableCompression = false,
@@ -34,11 +34,7 @@ const setup = (
 
   // Headers
   app.set("trust proxy", trustProxy);
-  app.use(nocache.middleware({ publicPath }));
-  app.use(compatibility.middleware());
+  app.use(noCacheMiddleware({ publicPath }));
+  app.use(browserCompatibilityMiddleware());
   if (!disableCompression) app.use(compression());
-};
-
-module.exports = {
-  setup,
 };

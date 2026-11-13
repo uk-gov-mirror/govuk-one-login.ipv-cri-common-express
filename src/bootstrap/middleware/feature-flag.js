@@ -1,6 +1,6 @@
-const deepCloneMerge = require("deep-clone-merge");
+import deepCloneMerge from "deep-clone-merge";
 
-const middleware =
+export const featureFlagMiddleware =
   ({ featureFlags } = {}) =>
   (req, res, next) => {
     req.featureFlags = deepCloneMerge.extend(
@@ -12,40 +12,30 @@ const middleware =
     next();
   };
 
-const getFlags = (req) => req.featureFlags || {};
+export const getFlags = (req) => req.featureFlags || {};
 
-const isEnabled = (flag, req) => getFlags(req)[flag] === true;
+export const isEnabled = (flag, req) => getFlags(req)[flag] === true;
 
-const isDisabled = (flag, req) => !isEnabled(flag, req);
+export const isDisabled = (flag, req) => !isEnabled(flag, req);
 
-const redirectIfEnabled = (flag, url) => (req, res, next) => {
+export const redirectIfEnabled = (flag, url) => (req, res, next) => {
   if (isEnabled(flag, req)) {
     return res.redirect(url);
   }
   next();
 };
 
-const redirectIfDisabled = (flag, url) => (req, res, next) => {
+export const redirectIfDisabled = (flag, url) => (req, res, next) => {
   if (isDisabled(flag, req)) {
     return res.redirect(url);
   }
   next();
 };
 
-const routeIf = (flag, handlerIf, handlerElse) => (req, res, next) => {
+export const routeIf = (flag, handlerIf, handlerElse) => (req, res, next) => {
   if (isEnabled(flag, req)) {
     handlerIf(req, res, next);
   } else {
     handlerElse(req, res, next);
   }
-};
-
-module.exports = {
-  middleware,
-  getFlags,
-  isEnabled,
-  isDisabled,
-  redirectIfEnabled,
-  redirectIfDisabled,
-  routeIf,
 };
