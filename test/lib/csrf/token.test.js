@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-const token = require("./token");
+const token = require("../../../src/lib/csrf/token");
 
 describe("lib/csrf/token", () => {
   const consumerSecrets = ["hunter2"]; // pragma: allowlist secret

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-const { configure } = require("./configure");
-const defaultConfig = require("./default-config");
+const { configure } = require("../../../src/lib/i18next/configure");
+const defaultConfig = require("../../../src/lib/i18next/default-config");
 
 describe("configure", () => {
   it("should return default config", () => {
