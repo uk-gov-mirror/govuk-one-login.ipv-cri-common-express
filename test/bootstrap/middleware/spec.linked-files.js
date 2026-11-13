@@ -1,10 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-
-const redisClient = require(APP_ROOT + "/src/bootstrap/lib/redis-client");
-const linkedFiles = require(
-  APP_ROOT + "/src/bootstrap/middleware/linked-files",
-);
-const uuid = require(APP_ROOT + "/src/bootstrap/lib/uuid");
+import * as crypto from "node:crypto";
+import { redisClientStore } from "../../../src/bootstrap/lib/redis-client.js";
+import * as linkedFiles from "../../../src/bootstrap/middleware/linked-files";
 
 const testuuid = "abcd1234-5678-9012-3456-abcdef1234567890";
 
@@ -23,8 +20,8 @@ describe("Linked Files", () => {
       get: vi.fn((id, callback) => callback(null, "S:data")),
       setex: vi.fn((id, ttl, data, callback) => callback(null)),
     };
-    vi.spyOn(redisClient, "getClient").mockReturnValue(redisStub);
-    vi.spyOn(uuid, "v4").mockReturnValue(testuuid);
+    redisClientStore.client = redisStub;
+    vi.spyOn(crypto, "randomUUID").mockReturnValue(testuuid);
     req = { session: {} };
     res = {
       finished: true,
@@ -35,8 +32,8 @@ describe("Linked Files", () => {
   });
 
   afterEach(() => {
-    redisClient.getClient.mockRestore();
-    uuid.v4.mockRestore();
+    redisClientStore.client = redisStub;
+    vi.mocked(crypto.randomUUID).mockRestore();
   });
 
   it("exports an object of middleware", () => {
@@ -185,11 +182,11 @@ describe("Linked Files", () => {
 
   describe("middleware", () => {
     it("should be a function", () => {
-      expect(typeof linkedFiles.middleware).toBe("function");
+      expect(typeof linkedFiles.linkedFilesMiddleware).toBe("function");
     });
 
     it("should call next", () => {
-      linkedFiles.middleware()(req, res, next);
+      linkedFiles.linkedFilesMiddleware()(req, res, next);
       expect(next).toHaveBeenCalled();
     });
 
@@ -198,7 +195,7 @@ describe("Linked Files", () => {
         vi.spyOn(linkedFiles, "add");
         vi.spyOn(linkedFiles, "get");
         vi.spyOn(linkedFiles, "del");
-        linkedFiles.middleware()(req, res, next);
+        linkedFiles.linkedFilesMiddleware()(req, res, next);
       });
 
       afterEach(() => {
@@ -232,7 +229,7 @@ describe("Linked Files", () => {
         456: true,
       };
 
-      linkedFiles.middleware({ ttl: 1800 })(req, res, next);
+      linkedFiles.linkedFilesMiddleware({ ttl: 1800 })(req, res, next);
 
       await vi.waitFor(() => {
         expect(redisStub.expire).toHaveBeenCalledTimes(3);
@@ -247,7 +244,7 @@ describe("Linked Files", () => {
         456: true,
       };
 
-      linkedFiles.middleware({ ttl: 1800 })(req, res, next);
+      linkedFiles.linkedFilesMiddleware({ ttl: 1800 })(req, res, next);
 
       delete req.session;
 
@@ -257,7 +254,7 @@ describe("Linked Files", () => {
     });
 
     it("should not extend any expiry times if there are no linked files", () => {
-      linkedFiles.middleware({ ttl: 1800 })(req, res, next);
+      linkedFiles.linkedFilesMiddleware({ ttl: 1800 })(req, res, next);
 
       setImmediate(() => {
         expect(redisStub.expire).not.toHaveBeenCalled();

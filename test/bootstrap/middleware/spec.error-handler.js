@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import reqRes from "hmpo-reqres";
+import * as loggerModule from "../../../src/bootstrap/lib/logger";
 
-const loggerModule = require("../../../src/bootstrap/lib/logger");
-const request = require("hmpo-reqres").req;
+const request = reqRes.req;
 
 describe("Error Handler", () => {
   let req, res, next, errorhandler, middleware;

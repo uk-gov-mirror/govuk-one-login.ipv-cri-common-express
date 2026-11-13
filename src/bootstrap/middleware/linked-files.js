@@ -28,7 +28,7 @@ function parse(data, cb) {
   cb(null, data);
 }
 
-function add(req, ttl, data, cb) {
+export function add(req, ttl, data, cb) {
   let id = randomUUID();
   data = stringify(data);
   redisClientStore.client.setex(PREFIX + id, ttl, data, (err) => {
@@ -49,14 +49,14 @@ function getNoCheck(id, cb) {
   });
 }
 
-function get(req, id, cb) {
+export function get(req, id, cb) {
   if (!req.session.linkedFiles?.[id]) {
     return cb(new Error("Linked file id not found " + id));
   }
   getNoCheck(id, cb);
 }
 
-function del(req, id, cb) {
+export function del(req, id, cb) {
   if (!req.session.linkedFiles?.[id]) {
     return cb(new Error("Linked file id not found " + id));
   }

@@ -15,7 +15,7 @@ export const setupRedisClient = (
     getConfig("APP_NAME") + ":" + hostname + ":" + (process.env.pm_id || "0");
   const log = getLogger(":redis");
 
-  if (redisClientStore.client) close();
+  if (redisClientStore.client) closeRedisClient();
 
   redisOptions.legacyMode = true;
 
@@ -62,7 +62,7 @@ export const setupRedisClient = (
   return redisClientStore.client;
 };
 
-export const close = (cb) => {
+export const closeRedisClient = (cb) => {
   if (!redisClientStore.client?.connected) {
     redisClientStore.client = null;
     if (cb) cb();

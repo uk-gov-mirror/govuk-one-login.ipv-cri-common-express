@@ -1,9 +1,9 @@
-const publicModule = require(APP_ROOT + "/src/bootstrap/middleware/public");
-const publicMiddleware = publicModule.middleware;
-const notFoundFallback = publicModule.notFoundFallback;
 import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
-
-const express = require("express");
+import {
+  publicAssetsMiddleware,
+  notFoundFallback,
+} from "../../../src/bootstrap/middleware/public.js";
+import express from "express";
 
 describe("Public static assets", () => {
   let router;
@@ -23,13 +23,13 @@ describe("Public static assets", () => {
 
   describe("middleware", () => {
     it("creates and returns a router", () => {
-      const router = publicMiddleware();
+      const router = publicAssetsMiddleware();
       expect(express.Router).toHaveBeenCalled();
       expect(router).toEqual(router);
     });
 
     it("adds default public directories", () => {
-      const router = publicMiddleware();
+      const router = publicAssetsMiddleware();
 
       expect(express.static).toHaveBeenCalledTimes(3);
       expect(router.use).toHaveBeenCalledTimes(3);
@@ -74,7 +74,7 @@ describe("Public static assets", () => {
       const hmpoComponentsDir = path.dirname(
         require.resolve("hmpo-components"),
       );
-      publicMiddleware({ hmpoComponentsDir });
+      publicAssetsMiddleware({ hmpoComponentsDir });
 
       expect(express.static).toHaveBeenCalledTimes(4);
       expect(router.use).toHaveBeenCalledTimes(4);

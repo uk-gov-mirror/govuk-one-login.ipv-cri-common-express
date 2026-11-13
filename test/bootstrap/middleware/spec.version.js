@@ -1,11 +1,10 @@
 import { describe, vi, expect, beforeEach, it } from "vitest";
-
-const version = require(APP_ROOT + "/src/bootstrap/middleware/version");
+import { versionMiddleware } from "../../../src/bootstrap/middleware/version.js";
 
 describe("Version", () => {
   it("exports a middleware function", () => {
-    expect(typeof version.middleware()).toBe("function");
-    expect(version.middleware()).toHaveLength(3);
+    expect(typeof versionMiddleware()).toBe("function");
+    expect(versionMiddleware()).toHaveLength(3);
   });
 
   describe("middleware", () => {
@@ -20,7 +19,7 @@ describe("Version", () => {
     });
 
     it("call res.send with the contents of version file and app name", () => {
-      version.middleware()(req, res, next);
+      versionMiddleware()(req, res, next);
 
       expect(res.send).toHaveBeenCalledTimes(1);
       expect(res.send).toHaveBeenCalledWith({
@@ -34,7 +33,7 @@ describe("Version", () => {
     });
 
     it("should ignore version file if not found", () => {
-      version.middleware({ versionFile: "notfound.json" })(req, res, next);
+      versionMiddleware({ versionFile: "notfound.json" })(req, res, next);
 
       expect(res.send).toHaveBeenCalledWith({
         appName: "test",

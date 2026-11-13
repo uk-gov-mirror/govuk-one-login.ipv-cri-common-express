@@ -14,28 +14,29 @@ export const featureFlagMiddleware =
 
 export const getFlags = (req) => req.featureFlags || {};
 
-export const isEnabled = (flag, req) => getFlags(req)[flag] === true;
+export const isFlagEnabled = (flag, req) => getFlags(req)[flag] === true;
 
-export const isDisabled = (flag, req) => !isEnabled(flag, req);
+export const isFlagDisabled = (flag, req) => !isFlagEnabled(flag, req);
 
-export const redirectIfEnabled = (flag, url) => (req, res, next) => {
-  if (isEnabled(flag, req)) {
+export const redirectIfFlagEnabled = (flag, url) => (req, res, next) => {
+  if (isFlagEnabled(flag, req)) {
     return res.redirect(url);
   }
   next();
 };
 
-export const redirectIfDisabled = (flag, url) => (req, res, next) => {
-  if (isDisabled(flag, req)) {
+export const redirectIfFlagDisabled = (flag, url) => (req, res, next) => {
+  if (isFlagDisabled(flag, req)) {
     return res.redirect(url);
   }
   next();
 };
 
-export const routeIf = (flag, handlerIf, handlerElse) => (req, res, next) => {
-  if (isEnabled(flag, req)) {
-    handlerIf(req, res, next);
-  } else {
-    handlerElse(req, res, next);
-  }
-};
+export const routeIfFlagEnabled =
+  (flag, handlerIf, handlerElse) => (req, res, next) => {
+    if (isFlagEnabled(flag, req)) {
+      handlerIf(req, res, next);
+    } else {
+      handlerElse(req, res, next);
+    }
+  };

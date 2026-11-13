@@ -1,7 +1,6 @@
 import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
-
-const healthcheck = require(APP_ROOT + "/src/bootstrap/middleware/healthcheck");
-const os = require("os");
+import * as os from "node:os";
+import { healthcheckMiddleware } from "../../../src/bootstrap/middleware/healthcheck.js";
 
 describe("healthcheck", () => {
   let req, res;
@@ -37,13 +36,13 @@ describe("healthcheck", () => {
   });
 
   it("should set Connection header to close", () => {
-    healthcheck.middleware()(req, res);
+    healthcheckMiddleware()(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Connection", "close");
   });
 
   it("should return a 200 status", () => {
-    healthcheck.middleware()(req, res);
+    healthcheckMiddleware()(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -64,7 +63,7 @@ describe("healthcheck", () => {
         message: "An error",
       };
     };
-    healthcheck.middleware({ healthFn })(req, res);
+    healthcheckMiddleware({ healthFn })(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith(
@@ -88,7 +87,7 @@ describe("healthcheck", () => {
         message: "An error",
       };
     };
-    healthcheck.middleware({ healthFn })(req, res);
+    healthcheckMiddleware({ healthFn })(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith(
@@ -111,7 +110,7 @@ describe("healthcheck", () => {
       error.code = "ERROR";
       throw error;
     };
-    healthcheck.middleware({ healthFn })(req, res);
+    healthcheckMiddleware({ healthFn })(req, res);
 
     await vi.waitFor(() => {
       expect(res.status).toHaveBeenCalledWith(500);
@@ -133,7 +132,7 @@ describe("healthcheck", () => {
   it("should append pm id to id if present", () => {
     process.env.pm_id = "1";
 
-    healthcheck.middleware()(req, res);
+    healthcheckMiddleware()(req, res);
 
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
